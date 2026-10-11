@@ -663,6 +663,22 @@ function loadChatToday() {
   renderChatInto(log, loadChat(dayKey()));
 }
 
+/* Всплывающее сообщение в логе разговора.
+
+   Эта функция пропала, когда лог переделывали на историю:
+   нажатие «Спросить» падало с «bubble is not defined», и
+   ИИ переставал отвечать совсем. Проверяется только тем,
+   что задать вопрос живьём. */
+function bubble(text, who) {
+  const log = document.getElementById('aiLog');
+  if (!log) return null;
+  const b = document.createElement('div');
+  b.className = 'bubble bubble-' + who;
+  b.textContent = text;
+  log.appendChild(b);
+  return b;
+}
+
 /* Последний ответ ИИ на экране — чтобы повесить на него
    кнопку «сохранить в заметки». */
 function lastAnswer() {
