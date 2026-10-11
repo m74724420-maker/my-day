@@ -1,0 +1,1491 @@
+/* =============================================================
+   ТВОЙ ДЕНЬ — оформление
+
+   Три темы, переключаются кнопкой вверху справа.
+   Цвета заданы переменными в :root — чтобы поменять палитру
+   всей страницы, достаточно поправить одну строку.
+
+   Тема по умолчанию — тёплая: коричнево-оранжевая.
+   ============================================================= */
+
+/* ---------- тёплая: коричнево-оранжевая ---------- */
+:root {
+  --bg:        #f6ede4;
+  --bg-deep:   #efe1d4;
+  --card:      #fffdfa;
+  --card-line: #e8d8c8;
+  --ink:       #3a2a1e;
+  --ink-soft:  #7c6553;
+  --accent:    #c2661f;
+  --accent-2:  #e08a2c;
+  --accent-ink:#fff8f0;
+  --chip:      #f2e0cd;
+  --shadow:    0 2px 10px rgba(112, 66, 30, .09);
+  --radius:    18px;
+}
+
+/* Крестик удаления заметки. Пальцем в 28px не попасть,
+   поэтому кликабельная область — 44px, а сам значок мельче.
+   Прозрачная часть тянется наружу, но не съедает место
+   в списке заметок. */
+.todo li .del {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 44px;
+  height: 44px;
+  font-size: 1.3rem;
+  color: var(--ink-soft);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 2;
+}
+.todo li .del:hover { background: var(--chip); color: var(--accent); }
+.todo li .del:active { transform: scale(.9); }
+
+/* ---------- коричневая: строгая, без оранжевого ---------- */
+[data-theme="brown"] {
+  --bg:        #efeae6;
+  --bg-deep:   #e4dcd6;
+  --card:      #fbf8f6;
+  --card-line: #ded3cb;
+  --ink:       #33261e;
+  --ink-soft:  #6f6058;
+  --accent:    #6f4a34;
+  --accent-2:  #8a6247;
+  --accent-ink:#f7f1ec;
+  --chip:      #e6dbd3;
+  --shadow:    0 2px 10px rgba(60, 40, 26, .10);
+}
+
+/* ---------- бежевая: самая спокойная ---------- */
+[data-theme="beige"] {
+  --bg:        #f7f4ec;
+  --bg-deep:   #efeade;
+  --card:      #fdfcf8;
+  --card-line: #e6e0d1;
+  --ink:       #38332a;
+  --ink-soft:  #7d766a;
+  --accent:    #8a7c58;
+  --accent-2:  #a3936a;
+  --accent-ink:#fbf8f0;
+  --chip:      #ece6d6;
+  --shadow:    0 2px 10px rgba(90, 78, 48, .09);
+}
+
+/* ---------- ТЁМНАЯ ВЕРСИЯ ----------
+   У тёмной темы две сложности, и обе неочевидны.
+
+   Первая: тень чёрная на чёрном не видна — карточки слились
+   бы в одну тёмную массу. Поэтому вместо тени у карточки
+   появляется светлая кайма сверху (--rim).
+
+   Вторая: тёмный фон плохо читается, если сверху лежит
+   светлая подложка. Поэтому в теме и в портретах времени
+   задаётся --tint: насколько сильно поверх снимка лежит цвет
+   темы. Ночью подложка плотнее, иначе фотография светится
+   белым прямоугольником в тёмной странице. */
+[data-theme="dark"] {
+  --bg:        #1c1815;
+  --bg-deep:   #141110;
+  --card:      #262019;
+  --card-line: #3b322a;
+  --ink:       #f0e7dc;
+  --ink-soft:  #b3a496;
+  --accent:    #d98b3f;
+  --accent-2:  #b96f2c;
+  --accent-ink:#1a1410;
+  --chip:      #332a22;
+  --shadow:    0 2px 10px rgba(0, 0, 0, .35);
+  --rim:       rgba(255, 255, 255, .07);
+  /* в тёмной теме подложка чуть плотнее: иначе светлый
+     снимок светится прямоугольником в тёмной странице */
+  --tint:      .58;
+}
+
+[data-theme="dark"] .card { border-top: 1px solid var(--rim); }
+[data-theme="dark"] .card-ai {
+  background: color-mix(in srgb, var(--card) 90%, var(--accent));
+}
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  [data-theme="dark"] .card-ai { background: var(--card); }
+}
+/* у карточки ИИ значок залит акцентом: в тёмной теме светлый
+   кружок бил бы в глаза, поэтому возвращаем спокойный */
+[data-theme="dark"] .card-ai .card-head .ico {
+  color: var(--accent);
+  background: var(--chip);
+}
+[data-theme="dark"] .panel { background: rgba(0, 0, 0, .6); }
+[data-theme="dark"] .theme-btn {
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .22);
+}
+
+/* ---------- УТРО, ДЕНЬ, ВЕЧЕР, НОЧЬ ----------
+   Это не тема, а время суток: слегка другой тон поверх любой
+   выбранной темы. Меняем только плотность подложки под
+   фотографией — этого хватает, чтобы настроение менялось,
+   а цвета карточек остались выбранными. */
+/* Плотность подложки под фотографией.
+
+   Здесь была ошибка: стояло 0.62 / 0.76 / 0.88, и для тёмных
+   снимков сверху добавлялось ещё 0.10. Вечером выходило 0.86 —
+   почти непрозрачно, и фотографии за подложкой не было видно
+   вовсе, хотя она и есть главная деталь фона.
+
+   Теперь подложка лишь слегка приглушает снимок, чтобы текст
+   читался. Сам фон виден всегда. */
+[data-daypart="day"]     { --tint: .38; }
+[data-daypart="evening"] { --tint: .50; }
+[data-daypart="night"]   { --tint: .60; }
+
+/* ---------------- ФОН ----------------
+   Картинка лежит отдельным слоем и не повторяется. Поверх неё
+   — полупрозрачная заливка в цвет темы, чтобы текст и карточки
+   читались, а фотография не мешала. */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-color: var(--bg-deep);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  transition: opacity .4s ease;
+}
+/* Пока картинка не загрузилась — не показываем пустоту */
+.backdrop:not(.loaded) { opacity: 0; }
+.backdrop.loaded { opacity: 1; }
+
+/* Затемнение. Цвет берётся у темы, поэтому в коричневой теме
+   и в бежевой оно разное — иначе фотография выбивается из
+   общего настроения страницы. */
+.backdrop-tint {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg);
+  /* плотность задаёт время суток, а не тема */
+  opacity: var(--tint, .50);
+  transition: background-color .25s ease, opacity .6s ease;
+}
+/* Тёмные фотографии чуть приглушаем — всего на 0.06, чтобы
+   снимок остался виден, но светлый текст поверх него читался. */
+.backdrop-tint.soft { opacity: calc(var(--tint, .50) + .06); }
+
+/* Карточки на фоне.
+
+   Раньше здесь стоял backdrop-filter: blur(2px) и лёгкая
+   прозрачность — выглядело красиво, но при прокрутке карточка
+   на пару кадров успевала отрисоваться без размытия и мигала
+   сплошным бежевым прямоугольником. Размытие в два пикселя
+   этого не стоило: убираем, карточка становится непрозрачной
+   и артефакт пропадает совсем. */
+.has-bg .card {
+  background: var(--card);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  color: var(--ink);
+  font-family: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+/* Цвет страницы задаётся на html, а не на body.
+   Иначе непрозрачный фон body перекрывает слой фотографии:
+   слой лежит с отрицательным z-index и рисуется ПОД фоном body.
+   Это самая частая причина «картинка есть, а её не видно». */
+html { background: var(--bg-deep); }
+body { background: transparent; }
+
+/* ---------------- шапка ---------------- */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  color: var(--accent-ink);
+  padding: calc(14px + env(safe-area-inset-top)) 0 16px;
+  box-shadow: 0 2px 14px rgba(0,0,0,.10);
+}
+.top-in {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hello h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+.today {
+  margin: 2px 0 0;
+  font-size: .85rem;
+  opacity: .85;
+}
+
+/* переключатель тем */
+.theme-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255,255,255,.35);
+  background: rgba(255,255,255,.14);
+  color: inherit;
+  font: inherit;
+  font-size: .8rem;
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-height: 44px;      /* палец должен попасть без прицеливания */
+}
+.theme-btn:active { background: rgba(255,255,255,.26); }
+#themeDot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.6);
+  background: #e08a2c;
+}
+
+/* ---------------- сетка ---------------- */
+.wrap {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+}
+
+/* ---------------- карточка ---------------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--card-line);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.card-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--chip);
+  font-size: .95rem;
+}
+.card-sub {
+  margin: 0 0 12px;
+  font-size: .85rem;
+  color: var(--ink-soft);
+}
+
+.mini-btn {
+  border: 1px solid var(--card-line);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: .78rem;
+  padding: 8px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 40px;      /* вторичная кнопка, но пальцем тоже нужно попасть */
+  flex-shrink: 0;
+}
+.mini-btn:active { background: var(--chip); }
+
+/* ---------------- карточка ИИ ---------------- */
+.card-ai { border-top: 3px solid var(--accent-2); }
+
+.limit {
+  background: var(--chip);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: .78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.limit-of { opacity: .65; }
+
+.ask { display: flex; flex-direction: column; gap: 10px; }
+#askInput {
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 76px;
+}
+#askInput:focus {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 1px;
+}
+.btn-ask {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  border: none;
+  border-radius: 14px;
+  padding: 13px 18px;
+  font-size: 1rem;
+  cursor: pointer;
+  min-height: 48px;
+}
+.btn-ask:disabled {
+  opacity: .45;
+  cursor: default;
+}
+.send-ico { font-size: 1.1rem; }
+
+.ai-log {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bubble {
+  padding: 11px 14px;
+  border-radius: 14px;
+  font-size: .93rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.bubble-me {
+  background: var(--chip);
+  align-self: flex-end;
+  max-width: 88%;
+}
+.bubble-ai {
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  align-self: flex-start;
+  max-width: 94%;
+}
+.bubble-wait { opacity: .6; font-style: italic; }
+
+/* когда запросы кончились */
+.card-ai.limit-done #askBox,
+.card-ai.limit-done .ai-log { display: none; }
+.limit-msg {
+  display: none;
+  background: var(--bg);
+  border: 1px dashed var(--card-line);
+  border-radius: 14px;
+  padding: 16px;
+  font-size: .92rem;
+  color: var(--ink-soft);
+}
+.card-ai.limit-done .limit-msg { display: block; }
+
+/* ---------------- погода ---------------- */
+.weather-now { text-align: center; padding: 6px 0 12px; }
+.w-temp {
+  font-size: 3rem;
+  font-weight: 300;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+/* Пока данных нет, показываем прочерк аккуратно: крупным он
+   выглядит как разделитель и пугает — будто что-то сломалось. */
+.w-temp.empty { font-size: 1.5rem; opacity: .35; }
+.w-desc { font-size: .98rem; color: var(--ink-soft); margin-top: 2px; }
+.w-meta { font-size: .8rem; color: var(--ink-soft); opacity: .8; margin-top: 4px; }
+
+.weather-days {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--card-line);
+}
+.w-day {
+  flex: 0 0 auto;
+  min-width: 56px;
+  text-align: center;
+  font-size: .78rem;
+  color: var(--ink-soft);
+}
+.w-day .d { font-weight: 600; color: var(--ink); }
+.w-day .ic { font-size: 1.2rem; display: block; margin: 3px 0; }
+.w-day .hi { color: var(--ink); }
+.w-day .lo { opacity: .65; }
+
+/* ---------------- новости ---------------- */
+.news-list { display: flex; flex-direction: column; gap: 10px; }
+.fr-news-head {
+  margin: 4px 0 2px;
+  font-size: .82rem;
+  font-weight: 650;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.fr-news-head:not(:first-child) { margin-top: 10px; }
+.news-item {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 11px 13px;
+  border: 1px solid var(--card-line);
+  border-radius: 14px;
+  background: var(--bg);
+}
+.news-item:active { background: var(--chip); }
+.news-title { font-size: .93rem; font-weight: 550; }
+.news-src {
+  font-size: .74rem;
+  color: var(--ink-soft);
+  margin-top: 3px;
+  display: flex;
+  gap: 8px;
+}
+.empty { color: var(--ink-soft); font-size: .87rem; margin: 4px 0; }
+
+/* ---------------- ежедневник ---------------- */
+.day-count { font-size: .8rem; color: var(--ink-soft); }
+
+.add-row { display: flex; gap: 8px; margin: 12px 0; align-items: flex-start; }
+#addInput {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+  padding: 11px 13px;
+  resize: vertical;
+  min-height: 62px;
+  line-height: 1.45;
+}
+.add-btn {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  font-size: 1.4rem;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+/* заметки */
+.todo { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.todo li {
+  position: relative;
+  padding: 11px 40px 11px 13px;
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: .93rem;
+  line-height: 1.45;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+/* .todo .del описан выше: кликабельная область 44px */
+.todo .time {
+  display: block;
+  font-size: .72rem;
+  color: var(--ink-soft);
+  opacity: .7;
+  margin-top: 4px;
+}
+
+/* ---------------- подвал ---------------- */
+.foot {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 16px 32px;
+  font-size: .76rem;
+  color: var(--ink-soft);
+  opacity: .7;
+  text-align: center;
+}
+.foot p { margin: 0; }
+
+/* ---------------- телефон ---------------- */
+@media (max-width: 34rem) {
+  .hello h1 { font-size: 1.2rem; }
+  .card { padding: 14px; }
+  .wrap { padding: 12px 12px 32px; gap: 12px; }
+  .theme-btn { padding: 10px 12px; font-size: .76rem; }
+  .w-temp { font-size: 2.6rem; }
+}
+
+@media (min-width: 47rem) {
+  /* на широком экране две колонки: ИИ слева, остальное справа */
+  .wrap { grid-template-columns: 1fr 1fr; align-items: start; }
+  #cardAi { grid-row: span 3; }
+  #cardNews { grid-column: 2; }
+}
+
+/* когда меняем тему — плавно, но без мигания */
+body, .card, #askInput, .news-item, .todo li, #noteInput, #addInput {
+  transition: background-color .25s ease, border-color .25s ease, color .25s ease;
+}
+
+/* =============================================================
+   СТИЛИ НОВЫХ ЭЛЕМЕНТОВ
+   Дописаны отдельно, чтобы не трогать старую часть файла.
+   Порядок: карточки истории → заметки → панель → новости.
+   ============================================================= */
+
+/* ---------- КНОПКА-МИНИ ---------- */
+.mini-btn {
+  font: inherit;
+  font-size: .78rem;
+  line-height: 1;
+  color: var(--accent);
+  background: var(--chip);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 9px 13px;
+  min-height: 34px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color .2s ease, color .2s ease;
+}
+.mini-btn:hover { background: var(--accent); color: var(--accent-ink); }
+.mini-btn:active { transform: translateY(1px); }
+
+/* ---------- СЕГОДНЯ В ИСТОРИИ / ИНТЕРЕСНО ЗНАТЬ ---------- */
+
+.fact-date {
+  font-size: .76rem;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+
+.fact-kind {
+  display: inline-block;
+  font-size: .7rem;
+  letter-spacing: .04em;
+  text-transform: lowercase;
+  color: var(--accent);
+  background: var(--chip);
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-bottom: 8px;
+}
+
+.fact-title {
+  font-size: 1.06rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.fact-text {
+  font-size: .95rem;
+  line-height: 1.55;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.fact-link {
+  font-size: .86rem;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.fact-link:hover { color: var(--accent-2); }
+
+/* ---------- ЗАМЕТКИ: ПАНЕЛЬ КНОПОК ---------- */
+
+.notes-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* ---------- ЗАМЕТКИ: ПОИСК ---------- */
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.search-row[hidden] { display: none; }
+
+#notesSearch {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: .95rem;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-height: 44px;
+}
+#notesSearch:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.search-count {
+  font-size: .78rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* ---------- ЗАМЕТКИ: ФОРМА ---------- */
+
+.add-form { margin-bottom: 14px; }
+
+.note-title {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+  padding: 11px 14px;
+  min-height: 44px;
+  margin-bottom: 8px;
+}
+.note-title::placeholder { font-weight: 400; color: var(--ink-soft); }
+.note-title:focus { outline: none; border-color: var(--accent); }
+
+.add-row { display: flex; gap: 8px; align-items: flex-end; }
+
+#addInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-size: .95rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-height: 44px;
+  resize: vertical;
+}
+#addInput:focus { outline: none; border-color: var(--accent); }
+
+.add-btn {
+  flex: 0 0 auto;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  cursor: pointer;
+}
+.add-btn:hover { background: var(--accent-2); }
+.add-btn:active { transform: translateY(1px); }
+
+/* ---------- ЗАМЕТКИ: ВИД СПИСКА ---------- */
+
+.todo li.found { opacity: .96; }
+
+.day-count {
+  font-size: .8rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+/* карточка заметок коротко вспыхивает, когда ответ ИИ сохранён */
+#cardDay.flash {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--chip);
+}
+
+/* ---------- СОХРАНЕНИЕ ОТВЕТА ИИ ---------- */
+
+.save-note {
+  display: block;
+  margin-top: 10px;
+  font: inherit;
+  font-size: .78rem;
+  color: var(--accent);
+  background: var(--chip);
+  border: none;
+  border-radius: 999px;
+  padding: 9px 14px;
+  min-height: 36px;
+  cursor: pointer;
+}
+.save-note:hover { background: var(--accent); color: var(--accent-ink); }
+
+/* ---------- ПАНЕЛЬ ПРОШЛЫХ ДНЕЙ И СТРАХОВКА ---------- */
+
+.panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 18, 10, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+}
+.panel[hidden] { display: none; }
+
+.panel-box {
+  width: 100%;
+  max-width: 520px;
+  max-height: 84vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--card-line);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .3);
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--card-line);
+  flex: 0 0 auto;
+}
+.panel-head h2 { margin: 0; font-size: 1.1rem; }
+
+.panel-body {
+  padding: 16px 18px 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+}
+
+.arch-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.arch-head h3 { margin: 0; font-size: 1rem; }
+
+/* список дней */
+.arch-days { display: flex; flex-direction: column; gap: 8px; }
+
+.arch-day {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  font: inherit;
+  font-size: .92rem;
+  text-align: left;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+  padding: 13px 14px;
+  min-height: 48px;
+  cursor: pointer;
+}
+.arch-day:hover { border-color: var(--accent); }
+.arch-day:active { transform: translateY(1px); }
+
+.ad-date { flex: 1 1 auto; min-width: 0; }
+.ad-n { flex: 0 0 auto; font-size: .8rem; color: var(--ink-soft); }
+
+/* заметки выбранного дня */
+.arch-notes { list-style: none; margin: 0; padding: 0; }
+.arch-notes li {
+  position: relative;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+}
+.arch-notes li:last-child { margin-bottom: 0; }
+.arch-notes .time { font-size: .74rem; color: var(--ink-soft); }
+
+/* ---------- СТРАХОВКА ---------- */
+
+.big-btn {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  min-height: 48px;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+.big-btn:hover { background: var(--accent-2); }
+
+.export-box {
+  display: block;
+  width: 100%;
+  font-family: ui-monospace, "Consolas", monospace;
+  font-size: .82rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+  padding: 12px;
+  resize: vertical;
+}
+.export-box:focus { outline: none; border-color: var(--accent); }
+
+/* ---------- НОВОСТИ: ВЫБОР ТЕМ ---------- */
+
+.news-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.topic {
+  font: inherit;
+  font-size: .8rem;
+  color: var(--ink-soft);
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 999px;
+  padding: 9px 14px;
+  min-height: 36px;
+  cursor: pointer;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+.topic:hover { border-color: var(--accent); }
+
+/* выбранная тема — залита акцентом */
+.topic.on {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.fr-news-head {
+  font-size: .82rem;
+  letter-spacing: .04em;
+  text-transform: lowercase;
+  color: var(--ink-soft);
+  margin: 14px 0 8px;
+}
+.fr-news-head:first-child { margin-top: 0; }
+
+/* ---------- МОБИЛЬНЫЙ ЭКРАН 390 × 844 ---------- */
+@media (max-width: 34rem) {
+  .notes-tools { gap: 6px; }
+  .notes-tools .mini-btn { flex: 1 1 auto; text-align: center; }
+
+  /* на узком экране панель растягивается на всю высоту,
+     иначе список дней приходится долго прокручивать */
+  .panel { padding: 0; align-items: stretch; }
+  .panel-box { max-width: none; max-height: 100vh; height: 100%; border-radius: 0; }
+
+  .export-box { font-size: .8rem; }
+  .fact-title { font-size: 1rem; }
+}
+
+
+/* ---------- ДОСТУПНОСТЬ: РАЗМЕРЫ ----------
+   Проверка на телефоне показала, что мелкие кнопки и подписи
+   меньше нужного. Ниже — правки: интерактивные элементы не
+   меньше 44px в высоту, текст не меньше 14px. */
+
+.mini-btn,
+.topic {
+  font-size: .9rem;
+  min-height: 44px;
+  padding: 11px 16px;
+}
+
+.limit { font-size: .9rem; }
+.today { font-size: .95rem; }
+#themeName { font-size: .85rem; }
+.card-sub { font-size: .9rem; }
+.fact-date { font-size: .85rem; }
+.fact-link { font-size: .92rem; }
+.fact-text { font-size: 1rem; }
+.news-src,
+.w-day .d { font-size: .85rem; }
+.todo li .time { font-size: .82rem; }
+.ad-n { font-size: .85rem; }
+.save-note { font-size: .85rem; min-height: 44px; }
+.empty { font-size: .92rem; }
+
+/* Мелкие подписи, которые остались ниже 14px */
+#themeName, .fact-date, .w-meta, .day-count,
+.todo li .time, .foot p { font-size: .92rem; }
+.fact-kind { font-size: .88rem; }
+
+/* Пометка английского заголовка: маленькая буква «en» в
+   начале строки, чтобы её не спутать с названием источника. */
+.news-lang {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--chip);
+  border-radius: 5px;
+  padding: 2px 6px;
+  margin-right: 7px;
+  vertical-align: 2px;
+}
+
+/* =============================================================
+   ОФОРМЛЕНИЕ: ПРОХОД ПО ВЫГЛЯДУ
+   Карточки были плоские и одинаковые — все подряд, без
+   разницы в весе. Здесь появляются три вещи:
+     • заголовки получают воздух и тонкую линейку снизу,
+     • у каждой карточки свой акцентный значок в кружке,
+     • появляются состояния наведения и нажатия,
+       без них интерфейс кажется «неживым».
+   ============================================================= */
+
+/* ---------------- КАРТОЧКА ---------------- */
+
+.card {
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(112, 66, 30, .06),
+    0 8px 24px rgba(112, 66, 30, .08);
+  transition: box-shadow .25s ease, transform .25s ease;
+}
+
+/* при наведении карточка чуть приподнимается — это дешёвый,
+   но очень заметный признак «живого» интерфейса */
+@media (hover: hover) {
+  .card:hover {
+    box-shadow:
+      0 2px 4px rgba(112, 66, 30, .07),
+      0 14px 34px rgba(112, 66, 30, .12);
+    transform: translateY(-1px);
+  }
+}
+
+/* ---------------- ЗАГОЛОВОК КАРТОЧКИ ---------------- */
+
+.card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--card-line);
+}
+
+.card-head h2 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* значок в кружке вместо голого символа — круг даёт
+   карточке начало и повторяется от карточки к карточке */
+.card-head .ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  font-size: .95rem;
+  line-height: 1;
+  color: var(--accent);
+  background: var(--chip);
+  border-radius: 50%;
+}
+
+/* ИИ — главная карточка, выделяем её: чуть темнее фон
+   и заметнее тень. Порядок разделов начинается с неё. */
+.card-ai {
+  background: color-mix(in srgb, var(--card) 97%, var(--accent));
+  box-shadow:
+    0 2px 4px rgba(112, 66, 30, .08),
+    0 16px 40px rgba(112, 66, 30, .14);
+}
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  .card-ai { background: var(--card); }
+}
+.card-ai .card-head { border-bottom-color: var(--accent); }
+.card-ai .card-head .ico {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+/* ---------------- ШАПКА САЙТА ---------------- */
+
+.top {
+  box-shadow: 0 2px 18px rgba(60, 30, 10, .22);
+  /* transition: all заставляет браузер анимировать и размер,
+     и цвет — это лишняя работа при каждой прокрутке.
+     Перечисляем только цвет фона. */
+  transition: background-color .25s ease;
+}
+
+.hello h1 {
+  letter-spacing: -.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .18);
+}
+
+.today {
+  opacity: .92;
+  letter-spacing: .01em;
+}
+
+/* ---------------- КНОПКА ТЕМЫ ---------------- */
+
+.theme-btn {
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .3);
+  backdrop-filter: blur(6px);
+  transition: background-color .2s ease, transform .15s ease;
+}
+.theme-btn:hover { background: rgba(255, 255, 255, .28); }
+.theme-btn:active { transform: scale(.96); }
+
+/* ---------------- НОВОСТИ ---------------- */
+
+/* заголовок новости и источник — плотнее, чем было, чтобы
+   список читался как список, а не как простыня */
+.news-item {
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: background-color .2s ease, transform .15s ease;
+}
+@media (hover: hover) {
+  .news-item:hover {
+    background: var(--chip);
+    transform: translateX(2px);
+  }
+}
+.news-item:active { transform: scale(.99); }
+
+.news-title {
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 3px;
+}
+.news-src {
+  display: block;
+  font-style: normal;
+  color: var(--ink-soft);
+}
+
+/* ---------------- ПОГОДА ---------------- */
+
+.weather-now {
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--card-line);
+}
+
+.w-day {
+  border-radius: 10px;
+  padding: 8px 4px;
+  transition: background-color .2s ease;
+}
+@media (hover: hover) {
+  .w-day:hover { background: var(--chip); }
+}
+.w-day .hi { font-weight: 700; }
+.w-day .lo { color: var(--ink-soft); }
+
+/* ---------------- ЗАМЕТКИ ---------------- */
+
+.todo li {
+  border-radius: 12px;
+  transition: background-color .2s ease;
+}
+@media (hover: hover) {
+  .todo li:hover { background: var(--bg-deep); }
+}
+
+.note-head { font-weight: 650; }
+
+/* ---------------- КНОПКА «СПРОСИТЬ» ---------------- */
+
+.btn-ask {
+  box-shadow: 0 3px 12px rgba(194, 102, 31, .28);
+  transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease;
+}
+.btn-ask:hover:not(:disabled) {
+  box-shadow: 0 5px 18px rgba(194, 102, 31, .36);
+  transform: translateY(-1px);
+}
+.btn-ask:active:not(:disabled) { transform: translateY(1px); }
+.btn-ask:disabled { box-shadow: none; opacity: .55; cursor: default; }
+
+/* поле ввода получает мягкую рамку при фокусе — раньше
+   просто менялся цвет, было трудно заметить, где курсор */
+#askInput, #addInput, #noteTitle, #notesSearch {
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+#askInput:focus, #addInput:focus, #noteTitle:focus, #notesSearch:focus {
+  box-shadow: 0 0 0 3px var(--chip);
+}
+
+/* ---------------- РАЗДЕЛИТЕЛИ ТЕМ В НОВОСТЯХ ---------------- */
+
+.fr-news-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 650;
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: .95rem;
+}
+/* короткая линейка после слова «наука» / «искусство» —
+   отделяет темы друг от друга без рамок */
+.fr-news-head::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--card-line);
+}
+
+/* ---------------- ПОДВАЛ ---------------- */
+
+.foot {
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--card-line);
+}
+
+/* ---------------- УЗКИЙ ЭКРАН: ЗАГОЛОВОК КАРТОЧКИ ----------------
+   Значок занял 32px — на 390px ширины он начинает вытеснять
+   кнопку справа («другая», «обновить»). Поэтому на узких
+   экранах заголовок переносится на две строки, а кнопка
+   остаётся на первой, рядом с названием. */
+@media (max-width: 26rem) {
+  .card-head { flex-wrap: wrap; row-gap: 8px; }
+  .card-head h2 { font-size: 1.05rem; }
+  .card-head .mini-btn { order: 2; margin-left: auto; }
+  .limit { order: 3; flex: 1 1 100%; }
+}
+
+/* ---------------- ПОДСКАЗКА ПОД ТЕМАМИ НОВОСТЕЙ ----------------
+   Раньше при попытке выбрать четвёртую тему кнопка просто
+   молча не срабатывала — и её считали сломанной. Теперь
+   рядом с темами появляется объяснение. */
+.topic-hint {
+  font-size: .88rem;
+  line-height: 1.4;
+  color: var(--accent);
+  background: var(--chip);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+}
+.topic-hint[hidden] { display: none; }
+
+/* кнопка, которую сейчас нажать нельзя: коротко вздрагивает */
+.topic-deny {
+  animation: topic-shake .3s ease;
+}
+@keyframes topic-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topic-deny { animation: none; }
+  .card:hover, .btn-ask:hover:not(:disabled) { transform: none; }
+}
+
+/* ---------------- МЕЛКИЕ ПОДПИСИ ----------------
+   Проверка на телефоне нашла текст меньше 14px: метку «en»
+   у английских заголовков и подписи под ними. Метку «en»
+   поднял до 12px — это условный значок, не текст, — но
+   названия источников и цифры довёл до 14px. */
+.news-lang {
+  font-size: .75rem;
+  padding: 3px 7px;
+  margin-right: 8px;
+}
+.news-src,
+.w-day .d,
+.news-title .news-lang { font-size: .9rem; }
+.w-day .ic { font-size: 1.05rem; }
+
+/* =============================================================
+   ЗАСТАВКА ЗАГРУЗКИ
+   Пока браузер тянет фотографию фона (около 150 КБ) и рисует
+   страницу, показываем заставку в тон теме. Без неё первые
+   полсекунды — белая пустота, и кажется, что сайт не открылся.
+   ============================================================= */
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  opacity: 1;
+  transition: opacity .45s ease;
+}
+/* гасим классом, а не через hidden: атрибут hidden вместе с
+   display:flex выше всё равно оставляет элемент видимым */
+.splash.gone {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-in { text-align: center; }
+
+.splash-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2rem;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: 16px;
+  animation: splash-pulse 1.6s ease-in-out infinite;
+}
+@keyframes splash-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .55; transform: scale(.93); }
+}
+.splash-txt {
+  margin: 14px 0 0;
+  font-size: .95rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-mark { animation: none; }
+}
+
+/* =============================================================
+   КРУПНАЯ ДАТА В ШАПКЕ
+   ============================================================= */
+
+.big-date {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: .95;
+  color: var(--accent-ink);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .22);
+  margin-left: auto;
+}
+.bd-num {
+  font-size: 1.9rem;
+  font-weight: 300;
+  letter-spacing: -.03em;
+}
+.bd-mon {
+  font-size: .72rem;
+  letter-spacing: .1em;
+  text-transform: lowercase;
+  opacity: .88;
+}
+
+@media (max-width: 26rem) {
+  /* на узком экране дата уходит вниз: в одну строку всё
+     не влезает, а сжимать приветствие не хочется */
+  .top-in { flex-wrap: wrap; row-gap: 10px; }
+  .big-date {
+    order: 3;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 8px;
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+    opacity: .9;
+  }
+  .bd-num { font-size: 1.15rem; }
+}
+
+/* =============================================================
+   ФОНЫ: СЕТКА ВЫБОРА
+   Лента была прямо в шапке и занимала место, которого и так
+   мало. Теперь это отдельная карточка: открыли, выбрали.
+   ============================================================= */
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 10px;
+}
+
+.thumb {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: none;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color .2s ease, transform .15s ease;
+}
+.thumb:hover { transform: translateY(-2px); }
+.thumb:active { transform: scale(.97); }
+
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 72px;
+  object-fit: cover;
+}
+
+/* выбранный снимок обведён акцентом */
+.thumb.on { border-color: var(--accent); }
+
+/* сегодняшний снимок помечен точкой — видно, какой фон
+   был бы без ручного выбора */
+.thumb.today::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .75);
+}
+
+.thumb-cap {
+  display: block;
+  font-size: .82rem;
+  line-height: 1.25;
+  color: var(--ink-soft);
+  background: var(--bg);
+  padding: 6px 7px 7px;
+  text-align: left;
+}
+.thumb.on .thumb-cap { color: var(--accent); font-weight: 650; }
+
+@media (max-width: 26rem) {
+  .thumbs { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .thumb img { height: 64px; }
+}
+
+/* ---------------- МЕЛКИЕ ЦИФРЫ И ПОДПИСИ ----------------
+   Проверка нашла текст меньше 14px: месяц в крупной дате и
+   температуры в прогнозе. Цифры в прогнозе — не текст, но
+   раз их читают, поднял тоже: иначе мелко на телефоне. */
+.bd-mon { font-size: .9rem; }
+.w-day .hi,
+.w-day .lo { font-size: .92rem; }
+.w-day .d { font-size: .85rem; }
+
+/* Подписи под миниатюрами фонов: на 13px в сетке они
+   читались плохо, особенно на телефоне. */
+.thumb-cap { font-size: .88rem; }
+
+/* ---------------- КНОПКА «ФОН» В ШАПКЕ ----------------
+   Фон выбирается не каждый день, а карточка с фотографиями
+   занимала пол-экрана телефона. Теперь в шапке кнопка,
+   которая открывает панель, и сразу закрывается после выбора. */
+.top-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font: inherit;
+  font-size: .88rem;
+  line-height: 1;
+  color: var(--accent-ink);
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 999px;
+  padding: 11px 15px;
+  min-height: 44px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background-color .2s ease, transform .15s ease;
+}
+.top-btn:hover { background: rgba(255, 255, 255, .28); }
+.top-btn:active { transform: scale(.96); }
+.tb-ico { font-size: .95rem; }
+
+[data-theme="dark"] .top-btn {
+  background: rgba(255, 255, 255, .12);
+  border-color: rgba(255, 255, 255, .22);
+}
+
+/* на узком экране подпись убираем: остаётся значок,
+   а кнопка не вытесняет приветствие и дату */
+@media (max-width: 26rem) {
+  .top-btn .tb-txt { display: none; }
+  .top-btn { padding: 11px 13px; }
+}
+
+/* Дни недели в прогнозе: 13.6px — мелковато на телефоне. */
+.w-day .d { font-size: .92rem; }
+.w-day .ic { font-size: 1.1rem; }
