@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#8a4b1f">
+<title>Твой день</title>
+
+<!-- Иконка во вкладке телефона. Встроена прямо сюда, отдельной
+     картинки не нужно: если телефон не умеет эти значки,
+     он просто покажет страницу без иконки. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23c2661f'/%3E%3Ctext x='32' y='45' font-size='36' text-anchor='middle' fill='%23fff8f0' font-family='Georgia,serif'%3E%D0%A2%3C/text%3E%3C/svg%3E">
+
+<link rel="stylesheet" href="style.css?v=23">
+</head>
+<body class="has-bg">
+
+<!-- Пока грузится фон и стили — показываем заставку. Без неё
+     на медленной сети сначала мелькает белая пустота, и
+     кажется, что сайт не открылся. -->
+<div class="splash" id="splash">
+  <div class="splash-in">
+    <span class="splash-mark">Т</span>
+    <p class="splash-txt">Твой день</p>
+  </div>
+</div>
+
+<!-- Фоновая картинка живёт отдельным слоем под всем остальным.
+     Меняется сама по дням: одна и та же картинка каждый день
+     быстро надоедает. -->
+<div class="backdrop" id="backdrop" aria-hidden="true"></div>
+<div class="backdrop-tint" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="top-in">
+    <div class="hello">
+      <h1 id="greeting">Доброе утро</h1>
+      <p class="today" id="todayStr"></p>
+    </div>
+    <!-- крупная дата: число и месяц шрифтом побольше.
+         Раньше дата терялась среди карточек. -->
+    <div class="big-date" aria-hidden="true">
+      <span class="bd-num" id="bigDay">—</span>
+      <span class="bd-mon" id="bigMonth"></span>
+    </div>
+    <button class="top-btn" id="bgBtn" type="button" aria-label="Сменить фон">
+      <span class="tb-ico">▣</span><span class="tb-txt">Фон</span>
+    </button>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Сменить цвета">
+      <span id="themeDot"></span>
+      <span id="themeName">тёплая</span>
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ СПРАВА СВЕРХУ: ИИ ============ -->
+  <section class="card card-ai" id="cardAi">
+    <div class="card-head">
+      <h2><span class="ico">✦</span> Спроси</h2>
+      <div class="limit" id="limitBox">
+        <span id="limitLeft">—</span>
+        <span class="limit-of">из <span id="limitAll">—</span></span>
+      </div>
+    </div>
+
+    <p class="card-sub" id="aiSub">
+      Коротко и по делу. Остаток запросов обновится в 4:00.
+    </p>
+
+    <div class="ask" id="askBox">
+      <textarea id="askInput" rows="3" placeholder="Например: как быстро оттереть пятно на рубашке?"></textarea>
+      <button class="btn-ask" id="askBtn" type="button">
+        <span class="send-ico">↑</span><span>Спросить</span>
+      </button>
+    </div>
+
+    <div class="ai-log" id="aiLog"></div>
+  </section>
+
+  <!-- Фон выбирается из шапки кнопкой «Фон»: на телефоне
+       карточка с фотографиями занимала пол-экрана, а
+       смотреть её приходилось редко. -->
+
+  <!-- ============ СЕГОДНЯ В ИСТОРИИ ============ -->
+  <section class="card" id="cardToday">
+    <div class="card-head">
+      <h2><span class="ico">◷</span> Сегодня в истории</h2>
+      <button class="mini-btn" id="todayAnother" type="button">другая</button>
+    </div>
+    <div id="todayBody">
+      <p class="empty">Загружаю…</p>
+    </div>
+  </section>
+
+  <!-- ============ ЛЮБОПЫТНОЕ ============ -->
+  <section class="card" id="cardFact">
+    <div class="card-head">
+      <h2><span class="ico">❖</span> Интересно знать</h2>
+      <button class="mini-btn" id="factAnother" type="button">другая</button>
+    </div>
+    <div id="factBody">
+      <p class="empty">Загружаю…</p>
+    </div>
+  </section>
+
+  <!-- ============ ПОГОДА ============ -->
+  <section class="card" id="cardWeather">
+    <div class="card-head">
+      <h2><span class="ico">☀</span> Погода</h2>
+      <button class="mini-btn" id="weatherCityBtn" type="button">обновить</button>
+    </div>
+    <div class="weather-now" id="weatherNow">
+      <div class="w-temp empty" id="wTemp">—</div>
+      <div class="w-desc" id="wDesc">загружаю…</div>
+      <div class="w-meta"><span id="wFeel">ощущается —</span> · <span id="wWind">ветер —</span></div>
+    </div>
+    <div class="weather-days" id="weatherDays"></div>
+  </section>
+
+  <!-- ============ НОВОСТИ ============ -->
+  <section class="card" id="cardNews">
+    <div class="card-head">
+      <h2><span class="ico">◈</span> Новости</h2>
+      <button class="mini-btn" id="newsRefresh" type="button">обновить</button>
+    </div>
+    <div class="news-topics" id="newsTopics"></div>
+    <p class="topic-hint" id="topicHint" hidden></p>
+    <p class="card-sub" id="newsSub">Коротко, по делу.</p>
+    <div class="news-list" id="newsList">
+      <p class="empty">Пока пусто — раздел в работе.</p>
+    </div>
+  </section>
+
+  <!-- ============ ЗАМЕТКИ ============ -->
+  <section class="card" id="cardDay">
+    <div class="card-head">
+      <h2><span class="ico">✎</span> Заметки дня</h2>
+      <span class="day-count" id="dayCount"></span>
+    </div>
+
+    <div class="notes-tools">
+      <button class="mini-btn" id="btnArchive" type="button">Прошлые дни</button>
+      <button class="mini-btn" id="btnSearch" type="button">Поиск</button>
+      <button class="mini-btn" id="btnExport" type="button">Страховка</button>
+    </div>
+
+    <div class="search-row" id="searchRow" hidden>
+      <input type="text" id="notesSearch" placeholder="Найти в заметках…" autocomplete="off">
+      <span class="search-count" id="searchCount"></span>
+    </div>
+
+    <form class="add-form" id="addForm" autocomplete="off">
+      <input type="text" id="noteTitle" class="note-title" placeholder="Заголовок — необязательно" maxlength="80">
+      <div class="add-row">
+        <textarea id="addInput" rows="2" placeholder="Что хочется записать?"></textarea>
+        <button class="add-btn" type="submit" aria-label="Добавить заметку">+</button>
+      </div>
+    </form>
+
+    <ul class="todo" id="todoList"></ul>
+    <p class="empty" id="notesEmpty">Заметок пока нет. Напишите первую — она останется здесь.</p>
+  </section>
+
+</main>
+
+<!-- ============ ПАНЕЛЬ ВЫБОРА ФОНА ============ -->
+<div class="panel" id="bgPanel" hidden>
+  <div class="panel-box">
+    <div class="panel-head">
+      <h2>Фон сайта</h2>
+      <button class="mini-btn" id="bgToday" type="button">как сегодня</button>
+      <button class="mini-btn" id="bgClose" type="button">Закрыть</button>
+    </div>
+    <div class="panel-body">
+      <p class="card-sub">Каждый день своя фотография. Можно выбрать любую.</p>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ПАНЕЛЬ ПРОШЛЫХ ДНЕЙ ============ -->
+<div class="panel" id="archivePanel" hidden>
+  <div class="panel-box">
+    <div class="panel-head">
+      <h2 id="archiveTitle">Прошлые дни</h2>
+      <button class="mini-btn" id="archiveClose" type="button">Закрыть</button>
+    </div>
+    <div class="panel-body" id="archiveBody"></div>
+  </div>
+</div>
+
+<footer class="foot">
+  <p>Сделано для себя. Данные хранятся только в этом браузере.</p>
+</footer>
+
+<script src="interest.js?v=8"></script>
+<script src="app.js?v=12"></script>
+</body>
+</html>
