@@ -8,19 +8,22 @@
    Тема по умолчанию — тёплая: коричнево-оранжевая.
    ============================================================= */
 
-/* ---------- тёплая: коричнево-оранжевая ---------- */
+/* ---------- ЖЁЛТАЯ: мягкая, тёплая ----------
+   Раньше на её месте была бежевая, но она выглядела почти
+   белой и на фоне фотографий терялась. Теперь это
+   настоящий мягкий жёлтый: теплее, заметнее, спокойнее. */
 :root {
-  --bg:        #f6ede4;
-  --bg-deep:   #efe1d4;
-  --card:      #fffdfa;
-  --card-line: #e8d8c8;
-  --ink:       #3a2a1e;
-  --ink-soft:  #7c6553;
-  --accent:    #c2661f;
-  --accent-2:  #e08a2c;
-  --accent-ink:#fff8f0;
-  --chip:      #f2e0cd;
-  --shadow:    0 2px 10px rgba(112, 66, 30, .09);
+  --bg:        #f7f0da;
+  --bg-deep:   #efe5c6;
+  --card:      #fdf9ec;
+  --card-line: #e6dcbb;
+  --ink:       #3d3320;
+  --ink-soft:  #7d705a;
+  --accent:    #a8821f;
+  --accent-2:  #c49a35;
+  --accent-ink:#fffdf6;
+  --chip:      #f0e6c8;
+  --shadow:    0 2px 10px rgba(110, 90, 35, .10);
   --radius:    18px;
 }
 
@@ -45,19 +48,23 @@
 .todo li .del:hover { background: var(--chip); color: var(--accent); }
 .todo li .del:active { transform: scale(.9); }
 
-/* ---------- коричневая: строгая, без оранжевого ---------- */
+/* ---------- КОРИЧНЕВАЯ: строгая, заметно темнее ----------
+   Просили опустить тон на пару ступеней: раньше она была
+   почти белой и не отличалась от соседней. Теперь фон и
+   карточки плотнее, акцент глубже — тема читается как
+   отдельная, а не как «то же самое, но чуть иначе». */
 [data-theme="brown"] {
-  --bg:        #efeae6;
-  --bg-deep:   #e4dcd6;
-  --card:      #fbf8f6;
-  --card-line: #ded3cb;
-  --ink:       #33261e;
-  --ink-soft:  #6f6058;
-  --accent:    #6f4a34;
-  --accent-2:  #8a6247;
+  --bg:        #ded4cc;
+  --bg-deep:   #cec2b8;
+  --card:      #f0e9e3;
+  --card-line: #cabcb1;
+  --ink:       #2b201a;
+  --ink-soft:  #62564e;
+  --accent:    #5d3b28;
+  --accent-2:  #7a5240;
   --accent-ink:#f7f1ec;
-  --chip:      #e6dbd3;
-  --shadow:    0 2px 10px rgba(60, 40, 26, .10);
+  --chip:      #ded2c8;
+  --shadow:    0 2px 10px rgba(50, 33, 21, .16);
 }
 
 /* ---------- бежевая: самая спокойная ---------- */
@@ -1489,3 +1496,59 @@ body, .card, #askInput, .news-item, .todo li, #noteInput, #addInput {
 /* Дни недели в прогнозе: 13.6px — мелковато на телефоне. */
 .w-day .d { font-size: .92rem; }
 .w-day .ic { font-size: 1.1rem; }
+
+/* ---------------- ИСТОРИЯ РАЗГОВОРОВ ---------------- */
+
+.ai-foot {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--card-line);
+}
+
+/* кнопка со счётчиком сохранённых разговоров */
+#chatHistory { position: relative; }
+
+.badge {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 3px 7px;
+  margin-left: 6px;
+  vertical-align: 1px;
+}
+.badge[hidden] { display: none; }
+
+/* заголовок дня в панели истории */
+.chat-day {
+  font-size: .95rem;
+  font-weight: 650;
+  color: var(--accent);
+  margin: 16px 0 8px;
+}
+.chat-day:first-of-type { margin-top: 0; }
+
+.chat-day-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: var(--bg);
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+}
+
+/* Число в счётчике запросов стояло на 11.5px — на телефоне
+   его почти не разобрать. */
+.limit-of { font-size: .92rem; }
+.limit { font-size: .95rem; }
+
+/* Счётчик сохранённых разговоров был 11.5px — на телефоне
+   цифра в нём читалась плохо. */
+.badge { font-size: .8rem; }
+
+/* Правило выше перебивало .badge — задаём прямо по ID. */
+#chatBadge.badge { font-size: .88rem; }

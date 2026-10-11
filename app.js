@@ -44,11 +44,19 @@ const Store = {
    2. ТЕМЫ ОФОРМЛЕНИЯ
    ============================================================= */
 
+/* Тем осталось три: мягкая жёлтая, коричневая и тёмная.
+   Раньше их было четыре, но тёплая и бежевая оказались
+   лишними — обе светлые и между собой неразличимы.
+
+   Здесь важный момент: у людей, которые открыли сайт
+   раньше, в памяти остались старые названия. Если оставить
+   как есть, при первом нажатии кнопки вылезет тема,
+   которой больше нет. Поэтому applyTheme проверяет имя
+   и молча берёт первую подходящую. */
 const THEMES = [
-  { id: 'warm',  name: 'тёплая',     dot: '#e08a2c' },
-  { id: 'brown', name: 'коричневая', dot: '#6f4a34' },
-  { id: 'beige', name: 'бежевая',    dot: '#a3936a' },
-  { id: 'dark',  name: 'тёмная',     dot: '#d98b3f' }
+  { id: 'warm',  name: 'жёлтая',      dot: '#c49a35' },
+  { id: 'brown', name: 'коричневая',  dot: '#5d3b28' },
+  { id: 'dark',  name: 'тёмная',      dot: '#d98b3f' }
 ];
 
 function applyTheme(id) {
@@ -531,13 +539,135 @@ async function syncLimit() {
   }
 }
 
-function bubble(text, who) {
+/* ---------------- ИСТОРИЯ РАЗГОВОРОВ ----------------
+
+   Раньше разговор с ИИ исчезал при перезагрузке страницы:
+   оставалось только то, что вы успели сохранить в заметки.
+   Теперь весь разговор лежит в том же браузере, что и
+   заметки, — по дням, как и заметки.
+
+   Хранится только то, что уже показано на экране. Ничего
+   не отправляется на сервер и никуда не уходит. */
+
+/* Ключи: td.chat.YYYY-MM-DD = [{q, a, at}] */
+function chatKey(key) { return 'td.chat.' + (key || dayKey()); }
+
+function loadChat(key) { return Store.get(chatKey(key), []); }
+
+function saveChat(key, list) { Store.set(chatKey(key), list); }
+
+/* Один разговор. Если по дате уже есть записи, новый
+   дописывается в конец. */
+function pushChat(question, answer) {
+  const key = dayKey();
+  const list = loadChat(key);
+  list.push({ q: question, a: answer, at: Date.now() });
+  /* Больше 200 разговоров на день держать смысла нет:
+     это уже не история, а просто способ занять память. */
+  if (list.length > 200) list.splice(0, list.length - 200);
+  saveChat(key, list);
+  renderChatBadge();
+}
+
+/* Все дни, где есть разговоры, — от новых к старым */
+function allChatDays() {
+  const out = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf('td.chat.') === 0) {
+      const key = k.slice('td.chat.'.length);
+      const list = Store.get(k, []);
+      if (list && list.length) out.push({ key: key, count: list.length });
+    }
+  }
+  out.sort(function (a, b) { return b.key.localeCompare(a.key); });
+  return out;
+}
+
+function renderChatBadge() {
+  const el = document.getElementById('chatBadge');
+  if (!el) return;
+  const days = allChatDays();
+  const total = days.reduce(function (a, d) { return a + d.count; }, 0);
+  el.hidden = total === 0;
+  el.textContent = total;
+}
+
+/* Рисуем переписку за один день */
+function renderChatInto(box, list) {
+  list.forEach(function (m) {
+    const q = document.createElement('div');
+    q.className = 'bubble bubble-me';
+    q.textContent = m.q;
+    box.appendChild(q);
+
+    if (m.a) {
+      const a = document.createElement('div');
+      a.className = 'bubble bubble-ai';
+      a.textContent = m.a;
+      box.appendChild(a);
+    }
+  });
+}
+
+/* Панель со всей историей: сначала сегодняшний день,
+   ниже — предыдущие. */
+function openChatHistory() {
+  const panel = document.getElementById('archivePanel');
+  const body = document.getElementById('archiveBody');
+  const days = allChatDays();
+
+  if (!days.length) {
+    body.innerHTML = '<p class="empty">Пока пусто. Здесь появятся вопросы и ответы.</p>';
+    panel.hidden = false;
+    return;
+  }
+
+  let html = '<div class="arch-head"><h3>Все разговоры</h3></div>';
+  days.forEach(function (d) {
+    const isToday = d.key === dayKey();
+    html += '<h4 class="chat-day">' + escHtml(dayKeyHuman(d.key)) +
+            (isToday ? ' · сегодня' : '') + '</h4><div class="chat-day-box"></div>';
+  });
+
+  const clear = '<button class="mini-btn" id="chatClear" type="button">очистить всё</button>' +
+                '<button class="mini-btn" id="archBack" type="button">Закрыть</button>';
+  html = '<div class="arch-head">' + clear + '</div>' + html.slice(html.indexOf('<h4'));
+
+  body.innerHTML = html;
+  panel.hidden = false;
+
+  /* подставляем переписку в каждую рамку */
+  const boxes = body.querySelectorAll('.chat-day-box');
+  days.forEach(function (d, i) {
+    if (boxes[i]) renderChatInto(boxes[i], loadChat(d.key));
+  });
+
+  body.querySelector('#archBack').addEventListener('click', closeArchive);
+
+  /* удаление: спрашиваем, потому что восстановить нельзя */
+  body.querySelector('#chatClear').addEventListener('click', function () {
+    if (!confirm('Удалить всю историю разговоров с ИИ? Заметки останутся на месте.')) return;
+    allChatDays().forEach(function (d) { Store.del('td.chat.' + d.key); });
+    closeArchive();
+    loadChatToday();
+    renderChatBadge();
+  });
+}
+
+/* Показываем сегодняшний разговор на главной странице */
+function loadChatToday() {
   const log = document.getElementById('aiLog');
-  const b = document.createElement('div');
-  b.className = 'bubble bubble-' + who;
-  b.textContent = text;
-  log.appendChild(b);
-  return b;
+  if (!log) return;
+  log.innerHTML = '';
+  renderChatInto(log, loadChat(dayKey()));
+}
+
+/* Последний ответ ИИ на экране — чтобы повесить на него
+   кнопку «сохранить в заметки». */
+function lastAnswer() {
+  const all = document.querySelectorAll('#aiLog .bubble-ai');
+  return all.length ? all[all.length - 1] : null;
 }
 
 let asking = false;
@@ -570,9 +700,13 @@ async function askQuestion() {
     const data = await serverAsk(text);
 
     if (data && data.ok) {
-      wait.classList.remove('bubble-wait');
-      wait.textContent = data.text;
-      attachSave(wait, text, data.text);
+      /* Сохраняем разговор и перерисовываем лог целиком.
+         Так история на экране и в памяти всегда одна и та же,
+         и временный пузырь «Думаю…» исчезает сам. */
+      pushChat(text, data.text);
+      wait.remove();
+      loadChatToday();
+      attachSave(lastAnswer(), text, data.text);
       paintLimit(data.left, data.total);
       return;
     }
@@ -1190,6 +1324,9 @@ function start() {
   renderNotes();
   initSearch();
   initAsk();
+  loadChatToday();
+  renderChatBadge();
+  document.getElementById('chatHistory').addEventListener('click', openChatHistory);
   renderTopicPicker();
   loadWeather();
   loadNews();
